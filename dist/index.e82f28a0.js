@@ -557,10 +557,16 @@ function hmrAccept(bundle, id) {
 }
 
 },{}],"dV6cC":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _three = require("three");
 var _orbitControlsJs = require("three/examples/jsm/controls/OrbitControls.js");
 var _datGui = require("dat.gui");
+var _nebulaJpeg = require("../img/nebula.jpeg");
+var _nebulaJpegDefault = parcelHelpers.interopDefault(_nebulaJpeg);
+var _starsJpeg = require("../img/stars.jpeg");
+var _starsJpegDefault = parcelHelpers.interopDefault(_starsJpeg);
 const renderer = new _three.WebGLRenderer();
+renderer.shadowMap.enabled = true;
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 const scene = new _three.Scene();
@@ -586,6 +592,7 @@ const planeMaterial = new _three.MeshStandardMaterial({
 const plane = new _three.Mesh(planeGeometry, planeMaterial);
 scene.add(plane);
 plane.rotation.x = -0.5 * Math.PI;
+plane.receiveShadow = true;
 const sphereGeometry = new _three.SphereGeometry(4, 50, 50);
 const sphereMaterial = new _three.MeshStandardMaterial({
     color: "blue"
@@ -593,18 +600,76 @@ const sphereMaterial = new _three.MeshStandardMaterial({
 const sphere = new _three.Mesh(sphereGeometry, sphereMaterial);
 scene.add(sphere);
 sphere.position.set(-10, 10, 0);
+sphere.castShadow = true;
 const ambientLight = new _three.AmbientLight(0x333333);
 scene.add(ambientLight);
-const directionalLight = new _three.DirectionalLight(0xffffff, 0.8);
-scene.add(directionalLight);
-directionalLight.position.set(-30, 50, 0);
-const dLightHelper = new _three.DirectionalLightHelper(directionalLight, 5);
-scene.add(dLightHelper);
+// const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+// scene.add(directionalLight);
+// directionalLight.position.set(-30, 50, 0);
+// directionalLight.castShadow = true;
+// directionalLight.shadow.camera.bottom = -12;
+// const dLightHelper = new THREE.DirectionalLightHelper(directionalLight, 5);
+// scene.add(dLightHelper);
+// const dLightShadowHelper = new THREE.CameraHelper(
+//   directionalLight.shadow.camera
+// );
+// scene.add(dLightShadowHelper);
+const spotLight = new _three.SpotLight(0xffffff);
+scene.add(spotLight);
+spotLight.position.set(-100, 100, 0);
+spotLight.castShadow = true;
+spotLight.angle = 0.2;
+const sLightHelper = new _three.SpotLightHelper(spotLight);
+scene.add(sLightHelper);
+// scene.fog = new THREE.Fog(0xffffff, 0, 200);
+scene.fog = new _three.FogExp2(0xffffff, 0.01);
+// renderer.setClearColor(0xffea00); //background color
+const textureLoader = new _three.TextureLoader();
+// scene.background = textureLoader.load(stars); // 2d background
+const cubeTextureLoader = new _three.CubeTextureLoader();
+scene.background = cubeTextureLoader.load([
+    (0, _nebulaJpegDefault.default),
+    (0, _nebulaJpegDefault.default),
+    (0, _starsJpegDefault.default),
+    (0, _starsJpegDefault.default),
+    (0, _starsJpegDefault.default),
+    (0, _starsJpegDefault.default)
+]);
+const box2Geometry = new _three.BoxGeometry(4, 4, 4);
+const box2Material = new _three.MeshBasicMaterial({
+});
+const box2MultiMaterial = [
+    new _three.MeshBasicMaterial({
+        map: textureLoader.load((0, _starsJpegDefault.default))
+    }),
+    new _three.MeshBasicMaterial({
+        map: textureLoader.load((0, _starsJpegDefault.default))
+    }),
+    new _three.MeshBasicMaterial({
+        map: textureLoader.load((0, _nebulaJpegDefault.default))
+    }),
+    new _three.MeshBasicMaterial({
+        map: textureLoader.load((0, _starsJpegDefault.default))
+    }),
+    new _three.MeshBasicMaterial({
+        map: textureLoader.load((0, _nebulaJpegDefault.default))
+    }),
+    new _three.MeshBasicMaterial({
+        map: textureLoader.load((0, _starsJpegDefault.default))
+    })
+];
+const box2 = new _three.Mesh(box2Geometry, box2MultiMaterial);
+// box2.material.map = textureLoader.load(nebula); // set texture
+scene.add(box2);
+box2.position.set(0, 15, 10);
 const gui = new _datGui.GUI();
 const options = {
     sphereColor: "#ffea00",
     wireframe: false,
-    speed: 0.01
+    speed: 0.01,
+    angle: 0.2,
+    penumbra: 0,
+    intensity: 1
 };
 gui.addColor(options, "sphereColor").onChange((e)=>{
     sphere.material.color.set(e);
@@ -613,17 +678,24 @@ gui.add(options, "wireframe").onChange((e)=>{
     sphere.material.wireframe = e;
 });
 gui.add(options, "speed", 0, 0.01);
+gui.add(options, "angle", 0, 1);
+gui.add(options, "penumbra", 0, 1);
+gui.add(options, "intensity", 0, 1);
 let step = 0;
 function animate(time) {
     box.rotation.x = time / 1000;
     box.rotation.y = time / 1000;
     step += options.speed;
     sphere.position.y = 10 * Math.abs(Math.sin(step));
+    spotLight.angle = options.angle;
+    spotLight.penumbra = options.penumbra;
+    spotLight.intensity = options.intensity;
+    sLightHelper.update();
     renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
 
-},{"three":"ktPTu","three/examples/jsm/controls/OrbitControls.js":"7mqRv","dat.gui":"k3xQk"}],"ktPTu":[function(require,module,exports) {
+},{"three":"ktPTu","three/examples/jsm/controls/OrbitControls.js":"7mqRv","dat.gui":"k3xQk","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","../img/nebula.jpeg":"97zGE","../img/stars.jpeg":"4RCgt"}],"ktPTu":[function(require,module,exports) {
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -32896,6 +32968,46 @@ var index = {
 };
 exports.default = index;
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["fyTPu","dV6cC"], "dV6cC", "parcelRequire2f4f")
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"97zGE":[function(require,module,exports) {
+module.exports = require("846f4b868f8566c8").getBundleURL("2MSMO") + "nebula.ea501cde.jpeg" + "?" + Date.now();
+
+},{"846f4b868f8566c8":"lgJ39"}],"lgJ39":[function(require,module,exports) {
+"use strict";
+var bundleURL = {};
+function getBundleURLCached(id) {
+    var value = bundleURL[id];
+    if (!value) {
+        value = getBundleURL();
+        bundleURL[id] = value;
+    }
+    return value;
+}
+function getBundleURL() {
+    try {
+        throw new Error();
+    } catch (err) {
+        var matches = ("" + err.stack).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^)\n]+/g);
+        if (matches) // The first two stack frames will be this function and getBundleURLCached.
+        // Use the 3rd one, which will be a runtime in the original bundle.
+        return getBaseURL(matches[2]);
+    }
+    return "/";
+}
+function getBaseURL(url) {
+    return ("" + url).replace(/^((?:https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/.+)\/[^/]+$/, "$1") + "/";
+} // TODO: Replace uses with `new URL(url).origin` when ie11 is no longer supported.
+function getOrigin(url) {
+    var matches = ("" + url).match(/(https?|file|ftp|(chrome|moz|safari-web)-extension):\/\/[^/]+/);
+    if (!matches) throw new Error("Origin not found");
+    return matches[0];
+}
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+exports.getOrigin = getOrigin;
+
+},{}],"4RCgt":[function(require,module,exports) {
+module.exports = require("934a8d592db8c562").getBundleURL("2MSMO") + "stars.affba39d.jpeg" + "?" + Date.now();
+
+},{"934a8d592db8c562":"lgJ39"}]},["fyTPu","dV6cC"], "dV6cC", "parcelRequire2f4f")
 
 //# sourceMappingURL=index.e82f28a0.js.map
